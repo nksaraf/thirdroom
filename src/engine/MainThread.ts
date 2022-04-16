@@ -1,4 +1,5 @@
 import GameWorker from "./GameWorker?worker";
+import EditorWorker from "./EditorWorker?worker";
 import { createInputManager } from "./input/InputManager";
 import { createResourceManagerBuffer } from "./resources/ResourceManager";
 import { createStatsBuffer, getStats, StatsObject } from "./stats";
@@ -11,8 +12,8 @@ import {
   PostMessageTarget,
 } from "./WorkerMessage";
 
-export async function initRenderWorker(canvas: HTMLCanvasElement, gameWorker: Worker) {
-  const supportsOffscreenCanvas = !!window.OffscreenCanvas;
+export async function initRenderWorker(canvas: HTMLCanvasElement, gameWorker: Worker, offscreen = true) {
+  const supportsOffscreenCanvas = offscreen && !!window.OffscreenCanvas;
 
   let renderWorker: Worker;
   let canvasTarget: HTMLCanvasElement | OffscreenCanvas;
@@ -150,6 +151,137 @@ export async function initEngine(canvas: HTMLCanvasElement): Promise<Engine> {
   gameWorker.postMessage({
     type: WorkerMessageType.StartGameWorker,
   });
+
+  console.log("HEREEE");
+
+  const onRenderWorkerMessage = ({ data }: MessageEvent) => {
+    if (typeof data !== "object") {
+      return;
+    }
+
+    const message = data as WorkerMessages;
+
+    switch (message.type) {
+      case WorkerMessageType.SaveGLTF:
+        downloadFile(message.buffer, "scene.glb");
+    }
+  };
+
+  renderWorker.addEventListener("message", onRenderWorkerMessage);
+
+  let animationFrameId: number;
+
+  function update() {
+    inputManager.update();
+
+    animationFrameId = requestAnimationFrame(update);
+  }
+
+  update();
+
+  return {
+    getStats() {
+      return getStats(statsBuffer);
+    },
+    exportScene() {
+      gameWorker.postMessage({
+        type: WorkerMessageType.ExportScene,
+      });
+    },
+    dispose() {
+      cancelAnimationFrame(animationFrameId);
+      inputManager.dispose();
+      gameWorker.terminate();
+      disposeRenderWorker();
+    },
+  };
+}
+
+export async function initEditor(canvas: HTMLCanvasElement): Promise<Engine> {
+  const inputManager = createInputManager(canvas);
+  const gameWorker = new EditorWorker();
+  const {
+    renderWorker,
+    canvasTarget,
+    renderWorkerMessageTarget,
+    gameWorkerMessageTarget,
+    dispose: disposeRenderWorker,
+  } = await initRenderWorker(canvas, gameWorker, false);
+
+  const renderableTripleBuffer = createTripleBuffer();
+
+  const resourceManagerBuffer = createResourceManagerBuffer();
+
+  const renderWorkerMessagePort =
+    renderWorkerMessageTarget instanceof MessagePort ? renderWorkerMessageTarget : undefined;
+
+  const statsBuffer = createStatsBuffer();
+
+  await new Promise<RenderWorkerInitializedMessage>((resolve, reject) => {
+    renderWorker.postMessage(
+      {
+        type: WorkerMessageType.InitializeRenderWorker,
+        renderableTripleBuffer,
+        gameWorkerMessageTarget,
+        canvasTarget,
+        initialCanvasWidth: canvas.clientWidth,
+        initialCanvasHeight: canvas.clientHeight,
+        resourceManagerBuffer,
+        statsSharedArrayBuffer: statsBuffer.buffer,
+      },
+      gameWorkerMessageTarget instanceof MessagePort && canvasTarget instanceof OffscreenCanvas
+        ? [gameWorkerMessageTarget, canvasTarget]
+        : undefined
+    );
+
+    const onMessage = ({ data }: any): void => {
+      if (data.type === WorkerMessageType.RenderWorkerInitialized) {
+        resolve(data);
+        renderWorker.removeEventListener("message", onMessage);
+      } else if (data.type === WorkerMessageType.RenderWorkerError) {
+        reject(data.error);
+        renderWorker.removeEventListener("message", onMessage);
+      }
+    };
+
+    renderWorker.addEventListener("message", onMessage);
+  });
+
+  await new Promise<GameWorkerInitializedMessage>((resolve, reject) => {
+    gameWorker.postMessage(
+      {
+        type: WorkerMessageType.InitializeGameWorker,
+        renderableTripleBuffer,
+        inputTripleBuffer: inputManager.tripleBuffer,
+        renderWorkerMessagePort,
+        resourceManagerBuffer,
+        statsSharedArrayBuffer: statsBuffer.buffer,
+      },
+      renderWorkerMessagePort ? [renderWorkerMessagePort] : undefined
+    );
+
+    const onMessage = ({ data }: { data: WorkerMessages }): void => {
+      if (data.type === WorkerMessageType.GameWorkerInitialized) {
+        resolve(data);
+        gameWorker.removeEventListener("message", onMessage);
+      } else if (data.type === WorkerMessageType.GameWorkerError) {
+        reject(data.error);
+        gameWorker.removeEventListener("message", onMessage);
+      }
+    };
+
+    gameWorker.addEventListener("message", onMessage);
+  });
+
+  renderWorker.postMessage({
+    type: WorkerMessageType.StartRenderWorker,
+  });
+
+  gameWorker.postMessage({
+    type: WorkerMessageType.StartGameWorker,
+  });
+
+  console.log("HEREEE");
 
   const onRenderWorkerMessage = ({ data }: MessageEvent) => {
     if (typeof data !== "object") {

@@ -157,7 +157,7 @@ export async function init(state: GameState): Promise<void> {
 
   //   createGLTFEntity(state, "/gltf/OutdoorFestival/OutdoorFestival.glb", scene);
 
-  const playerRig = createPlayerRig(state);
+  const playerRig = createPlayerRig(state, false);
   addChild(scene, playerRig);
 
   state.systems.push(
@@ -165,7 +165,7 @@ export async function init(state: GameState): Promise<void> {
     ActionMappingSystem,
     FirstPersonCameraSystem,
     PlayerControllerSystem,
-    PhysicsSystem,
+    // PhysicsSystem,
     RenderableVisibilitySystem
   );
 }

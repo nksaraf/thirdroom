@@ -8,6 +8,8 @@ export interface MeshDefinition extends ResourceDefinition {
   type: typeof MESH_RESOURCE;
   geometryResourceId: number;
   materialResourceId: number;
+  castShadow: boolean;
+  receiveShadow: boolean;
 }
 
 export function MeshResourceLoader(manager: ResourceManager): ResourceLoader<MeshDefinition, Mesh> {
@@ -23,6 +25,14 @@ export function MeshResourceLoader(manager: ResourceManager): ResourceLoader<Mes
 
       if (def.name) {
         mesh.name = def.name;
+      }
+
+      if (def.castShadow) {
+        mesh.castShadow = def.castShadow;
+      }
+
+      if (def.receiveShadow) {
+        mesh.receiveShadow = def.receiveShadow;
       }
 
       return {

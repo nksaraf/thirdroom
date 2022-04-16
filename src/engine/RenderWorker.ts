@@ -10,7 +10,9 @@ import {
   Matrix4,
   Camera,
   ACESFilmicToneMapping,
+  PCFSoftShadowMap,
   sRGBEncoding,
+  Color,
 } from "three";
 
 import { createCursorBuffer, addView, addViewMatrix4, CursorBuffer } from "./allocator/CursorBuffer";
@@ -214,6 +216,7 @@ async function onInit({
   registerResourceLoader(resourceManager, CameraResourceLoader);
   registerResourceLoader(resourceManager, LightResourceLoader);
   registerResourceLoader(resourceManager, GLTFResourceLoader);
+  // registerResourceLoader(resourceManager, ControlResourceLoader);
 
   scene.add(new AmbientLight(0xffffff, 0.5));
 
@@ -224,6 +227,19 @@ async function onInit({
   renderer.toneMappingExposure = 1;
   renderer.outputEncoding = sRGBEncoding;
   renderer.setSize(initialCanvasWidth, initialCanvasHeight, false);
+
+  // // Set shadowmap
+  // if (gl.shadowMap) {
+  //   const isBoolean = is.boo(shadows)
+  //   if ((isBoolean && gl.shadowMap.enabled !== shadows) || !is.equ(shadows, gl.shadowMap, shallowLoose)) {
+  // const old = gl.shadowMap.enabled
+  // gl.shadowMap.enabled = !!shadows
+  // if (!isBoolean) Object.assign(gl.shadowMap, shadows)
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = PCFSoftShadowMap;
+  renderer.shadowMap.needsUpdate = true;
+
+  scene.background = new Color(0xffffff);
 
   const clock = new Clock();
 

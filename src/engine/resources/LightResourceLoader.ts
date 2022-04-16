@@ -1,4 +1,4 @@
-import { DirectionalLight, Light, PointLight, Color, SpotLight } from "three";
+import { DirectionalLight, Light, PointLight, Color, SpotLight, DirectionalLightHelper, CameraHelper } from "three";
 
 import { ResourceDefinition, ResourceLoader, ResourceManager } from "./ResourceManager";
 
@@ -48,6 +48,9 @@ export function LightResourceLoader(manager: ResourceManager): ResourceLoader<Li
       switch (def.lightType) {
         case LightType.Directional: {
           light = new DirectionalLight(color, intensity);
+          const heler = new DirectionalLightHelper(light as DirectionalLight, 10);
+          light.add(heler);
+          light.castShadow = true;
           break;
         }
         case LightType.Point:
@@ -57,19 +60,22 @@ export function LightResourceLoader(manager: ResourceManager): ResourceLoader<Li
           const innerConeAngle = def.innerConeAngle === undefined ? 0 : def.innerConeAngle;
           const outerConeAngle = def.outerConeAngle === undefined ? Math.PI / 4 : def.outerConeAngle;
           light = new SpotLight(color, intensity, range, outerConeAngle, 1.0 - innerConeAngle / outerConeAngle, decay);
+          light.castShadow = true;
           break;
         }
         default:
           throw new Error(`Unknown light type ${(def as unknown as any).lightType}`);
       }
 
-      light.position.set(0, 0, 0);
+      light.position.set(10, 10, 10);
 
       if (def.lightType === LightType.Directional || def.lightType === LightType.Spot) {
         const targetLight = light as DirectionalLight | SpotLight;
         // Ensure light points down negative z axis
         targetLight.target.position.set(0, 0, -1);
         targetLight.add(targetLight.target);
+
+        light.add(new CameraHelper(light.shadow.camera));
       }
 
       if (def.name) {

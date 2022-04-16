@@ -2,7 +2,7 @@ import * as RAPIER from "@dimforge/rapier3d-compat";
 import { addEntity } from "bitecs";
 
 import { GameState } from "../GameWorker";
-import { addChild, addTransformComponent, createTransformEntity } from "../component/transform";
+import { addChild, addTransformComponent, createTransformEntity, Transform } from "../component/transform";
 import { setActiveCamera, setActiveScene, addRenderableComponent } from "../component/renderable";
 import { addRigidBody } from "../physics";
 import { MaterialType } from "../resources/MaterialResourceLoader";
@@ -58,6 +58,7 @@ export const createCube = (state: GameState, geometryResourceId: number) => {
     type: "mesh",
     geometryResourceId,
     materialResourceId,
+    castShadow: true,
   });
 
   const rigidBodyDesc = RAPIER.RigidBodyDesc.newDynamic();
@@ -68,6 +69,44 @@ export const createCube = (state: GameState, geometryResourceId: number) => {
 
   addRigidBody(world, eid, rigidBody);
   addRenderableComponent(state, eid, resourceId);
+
+  return eid;
+};
+
+export const createGround = (state: GameState, geometryResourceId: number) => {
+  const { world, resourceManager, physicsWorld } = state;
+  const eid = addEntity(world);
+  addTransformComponent(world, eid);
+
+  const materialResourceId = loadRemoteResource(resourceManager, {
+    type: "material",
+    materialType: MaterialType.Physical,
+    baseColorFactor: [0.9, 0.9, 0.9, 1.0],
+    roughnessFactor: 0.8,
+    metallicFactor: 0.8,
+  });
+
+  const resourceId = loadRemoteResource(resourceManager, {
+    type: "mesh",
+    geometryResourceId,
+    materialResourceId,
+    receiveShadow: true,
+    name: "ground",
+  });
+
+  //   const rigidBodyDesc = RAPIER.RigidBodyDesc.newStatic();
+  //   const rigidBody = physicsWorld.createRigidBody(rigidBodyDesc);
+
+  const groundColliderDesc = RAPIER.ColliderDesc.cuboid(1000.0, 1, 1000.0);
+  physicsWorld.createCollider(groundColliderDesc);
+
+  //   const colliderDesc = RAPIER.ColliderDesc.cuboid(0.5, 0.5, 0.5);
+  //   physicsWorld.createCollider(colliderDesc, rigidBody.handle);
+
+  //   addRigidBody(world, eid, rigidBody);
+  addRenderableComponent(state, eid, resourceId);
+
+  Transform.position[eid][1] = 1;
 
   return eid;
 };
@@ -95,11 +134,14 @@ export function createDirectionalLight(state: GameState, parentEid?: number) {
   addTransformComponent(state.world, eid);
   const lightResourceId = loadRemoteResource(state.resourceManager, {
     type: LIGHT_RESOURCE,
-    lightType: LightType.Directional,
-    intensity: 0.5,
+    lightType: LightType.Spot,
+    intensity: 2,
   });
   addRenderableComponent(state, eid, lightResourceId);
 
+  Transform.position[eid][0] = 10;
+  Transform.position[eid][1] = 10;
+  Transform.position[eid][2] = 10;
   if (parentEid !== undefined) {
     addChild(parentEid, eid);
   }

@@ -1,6 +1,7 @@
 import { addComponent, addEntity, IComponent } from "bitecs";
 import { vec3, quat, mat4 } from "gl-matrix";
 
+
 import { gameBuffer, renderableBuffer } from ".";
 import { addView, addViewVector3, addViewMatrix4, addViewVector4 } from "../allocator/CursorBuffer";
 import { maxEntities, NOOP } from "../config";

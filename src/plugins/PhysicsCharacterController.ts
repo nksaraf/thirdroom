@@ -79,7 +79,7 @@ export const createPlayerRig = (state: GameState, setActiveCamera = true) => {
   const playerRig = addEntity(world);
   addTransformComponent(world, playerRig);
   addComponent(world, PlayerRig, playerRig);
-  Transform.position[playerRig][2] = 50;
+  Transform.position[playerRig][2] = 0;
 
   addCameraYawTargetComponent(world, playerRig);
 

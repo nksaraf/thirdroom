@@ -28,6 +28,7 @@
     "hydrogen-view-sdk": "^0.0.10",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "@react-three/fiber": "latest",
     "react-router-dom": "6",
     "three": "mrdoob/three.js#4f94d21351c74b90720a6e1540b2b7e528a26a33"
   },
