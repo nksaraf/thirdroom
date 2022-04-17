@@ -1,7 +1,8 @@
+import { Camera } from "three";
 import { OrbitControls } from "three-stdlib";
 
-import { ResourceDefinition, ResourceLoader, ResourceManager } from "./ResourceManager";
-const CONTROL_RESOURCE = "Control";
+import { loadResource, ResourceDefinition, ResourceLoader, ResourceManager } from "./ResourceManager";
+const CONTROL_RESOURCE = "controls";
 
 export enum ControlType {
   Perspective = "perspective",
@@ -35,14 +36,14 @@ export function ControlResourceLoader(manager: ResourceManager): ResourceLoader<
   return {
     type: CONTROL_RESOURCE,
     async load(def) {
-      let Control: OrbitControls;
-      // const [geometry, material] = await Promise.all([
-      //   loadResource<BufferGeometry>(manager, def.geometryResourceId),
-      //   loadResource<Material>(manager, def.materialResourceId),
-      // ]);
+      let control: OrbitControls;
+      const [camera] = await Promise.all([loadResource<Camera>(manager, def.cameraRid)]);
 
-      switch (def.ControlType) {
+      switch (def.controlType) {
         case ControlType.Perspective:
+        case ControlType.Orbit:
+          control = new OrbitControls(camera, manager.canvas);
+          control.onChange(console.log)
         //   Control = new PerspectiveControl(def.yfov, def.aspectRatio || 1, def.znear, def.zfar || 1000);
         //   break;
         // case ControlType.Orthographic:
@@ -52,13 +53,15 @@ export function ControlResourceLoader(manager: ResourceManager): ResourceLoader<
         //   throw new Error(`Unknown Control type ${(def as unknown as any).ControlType}`);
       }
 
+      console.log(control.update(), manager.canvas);
+
       if (def.name) {
-        Control.name = def.name;
+        control.name = def.name;
       }
 
       return {
         name: def.name,
-        resource: Control,
+        resource: control,
       };
     },
   };

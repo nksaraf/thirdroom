@@ -1,7 +1,7 @@
 import * as RAPIER from "@dimforge/rapier3d-compat";
 import { addEntity, createWorld, IWorld } from "bitecs";
 
-import { addTransformComponent, updateMatrixWorld } from "./component/transform";
+import { addTransformComponent, Transform, updateMatrixWorld } from "./component/transform";
 import { createCursorBuffer } from "./allocator/CursorBuffer";
 import { maxEntities, NOOP, tickRate } from "./config";
 import {
@@ -26,6 +26,7 @@ import { renderableBuffer } from "./component";
 import { init } from "../game";
 import { createStatsBuffer, StatsBuffer, writeGameWorkerStats } from "./stats";
 import { exportGLTF } from "./gltf/exportGLTF";
+import { createCamera } from "./prefab";
 
 const workerScope = globalThis as typeof globalThis & Worker;
 

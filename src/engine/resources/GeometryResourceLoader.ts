@@ -1,4 +1,4 @@
-import { BoxBufferGeometry, PlaneBufferGeometry, BufferGeometry } from "three";
+import { BoxBufferGeometry, CapsuleGeometry, PlaneBufferGeometry, BufferGeometry } from "three";
 
 import { ResourceDefinition, ResourceLoader, ResourceManager } from "./ResourceManager";
 
@@ -53,6 +53,9 @@ export function GeometryResourceLoader(manager: ResourceManager): ResourceLoader
           break;
         case GeometryType.Plane:
           geometry = new PlaneBufferGeometry(def.width, def.height, def.widthSegments, def.heightSegments);
+          break;
+        case GeometryType.Plane:
+          geometry = new CapsuleGeometry(def.width, def.height, def.widthSegments, def.heightSegments);
           break;
         default:
           throw new Error(`Unknown geometry type`);

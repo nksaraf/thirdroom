@@ -70,6 +70,7 @@ export interface Engine {
 
 export async function initEngine(canvas: HTMLCanvasElement): Promise<Engine> {
   const inputManager = createInputManager(canvas);
+  inputManager.bind();
   const gameWorker = new GameWorker();
   const {
     renderWorker,
@@ -224,6 +225,7 @@ export async function initEditor(canvas: HTMLCanvasElement): Promise<Engine> {
         renderableTripleBuffer,
         gameWorkerMessageTarget,
         canvasTarget,
+        isEditor: true,
         initialCanvasWidth: canvas.clientWidth,
         initialCanvasHeight: canvas.clientHeight,
         resourceManagerBuffer,

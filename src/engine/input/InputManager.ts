@@ -16,7 +16,7 @@ export function createInputManager(canvas: HTMLCanvasElement) {
   const inputState = createInputState();
   const tripleBuffer = createTripleBuffer(inputState.buffer.byteLength);
 
-  const dispose = bindInputEvents(inputState, canvas);
+  let dispose: any;
 
   return {
     tripleBuffer,
@@ -27,8 +27,11 @@ export function createInputManager(canvas: HTMLCanvasElement) {
       inputState.mouse.movement[0] = 0;
       inputState.mouse.movement[1] = 0;
     },
+    bind() {
+      dispose = bindInputEvents(inputState, canvas);
+    },
     dispose() {
-      dispose();
+      dispose?.();
     },
   };
 }

@@ -2,11 +2,15 @@ import RAPIER from "@dimforge/rapier3d-compat";
 import { addComponent, addEntity, defineComponent, defineQuery } from "bitecs";
 import { Object3D, Quaternion, Vector3 } from "three";
 
+import { addRenderableComponent } from "../engine/component/renderable";
 import { addChild, addTransformComponent, Transform } from "../engine/component/transform";
 import { GameState } from "../engine/GameWorker";
 import { ButtonActionState } from "../engine/input/ActionMappingSystem";
 import { addRigidBody, RigidBody } from "../engine/physics";
 import { createCamera } from "../engine/prefab";
+import { GeometryType } from "../engine/resources/GeometryResourceLoader";
+import { MaterialType } from "../engine/resources/MaterialResourceLoader";
+import { loadRemoteResource } from "../engine/resources/RemoteResourceManager";
 import { addCameraPitchTargetComponent, addCameraYawTargetComponent } from "./FirstPersonCamera";
 
 export enum PhysicsGroups {
@@ -80,6 +84,7 @@ export const createPlayerRig = (state: GameState, setActiveCamera = true) => {
   addTransformComponent(world, playerRig);
   addComponent(world, PlayerRig, playerRig);
   Transform.position[playerRig][2] = 0;
+  Transform.position[playerRig][1] = 1.6;
 
   addCameraYawTargetComponent(world, playerRig);
 
@@ -89,6 +94,30 @@ export const createPlayerRig = (state: GameState, setActiveCamera = true) => {
     playerRigPosition[1],
     playerRigPosition[2]
   );
+
+  const geom = loadRemoteResource(state.resourceManager, {
+    type: "geometry",
+    geometryType: GeometryType.Box,
+  });
+
+  const mat = loadRemoteResource(state.resourceManager, {
+    type: "material",
+    materialType: MaterialType.Physical,
+    baseColorFactor: [Math.random(), Math.random(), Math.random(), 1.0],
+    roughnessFactor: 0.8,
+    metallicFactor: 0.8,
+  });
+
+  const mesh = loadRemoteResource(state.resourceManager, {
+    type: "mesh",
+    geometryResourceId: geom,
+    materialResourceId: mat,
+    name: "Player",
+    castShadow: true,
+  });
+
+  addRenderableComponent(state, playerRig, mesh);
+
   const rigidBody = physicsWorld.createRigidBody(rigidBodyDesc);
   const colliderDesc = RAPIER.ColliderDesc.cuboid(0.5, 0.5, 0.5);
   physicsWorld.createCollider(colliderDesc, rigidBody.handle);

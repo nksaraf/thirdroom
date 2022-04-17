@@ -14,6 +14,7 @@ import {
   sRGBEncoding,
   Color,
 } from "three";
+import { OrbitControls } from "three-stdlib";
 
 import { createCursorBuffer, addView, addViewMatrix4, CursorBuffer } from "./allocator/CursorBuffer";
 import { swapReadBuffer, getReadBufferIndex } from "./TripleBuffer";
@@ -54,6 +55,7 @@ import { TextureResourceLoader } from "./resources/TextureResourceLoader";
 import { LightResourceLoader } from "./resources/LightResourceLoader";
 import { exportSceneAsGLTF } from "./gltf/GLTFExporter";
 import { createStatsBuffer, StatsBuffer, writeRenderWorkerStats } from "./stats";
+import { ControlResourceLoader } from "./resources/ControlResourceLoader";
 
 let localEventTarget: EventTarget | undefined;
 
@@ -191,6 +193,7 @@ async function onInit({
   resourceManagerBuffer,
   renderableTripleBuffer,
   statsSharedArrayBuffer,
+  isEditor = false,
 }: InitializeRenderWorkerMessage): Promise<RenderWorkerState> {
   gameWorkerMessageTarget.addEventListener("message", onMessage);
 
@@ -207,6 +210,10 @@ async function onInit({
   camera.position.y = 1.6;
   camera.position.z = 50;
 
+  if (isEditor) {
+    const orbitControls = new OrbitControls(camera, canvasTarget as HTMLCanvasElement);
+  }
+
   const resourceManager = createResourceManager(resourceManagerBuffer, gameWorkerMessageTarget);
   registerResourceLoader(resourceManager, SceneResourceLoader);
   registerResourceLoader(resourceManager, GeometryResourceLoader);
@@ -216,6 +223,7 @@ async function onInit({
   registerResourceLoader(resourceManager, CameraResourceLoader);
   registerResourceLoader(resourceManager, LightResourceLoader);
   registerResourceLoader(resourceManager, GLTFResourceLoader);
+  registerResourceLoader(resourceManager, ControlResourceLoader);
 
   scene.add(new AmbientLight(0xffffff, 0.5));
 
@@ -226,6 +234,8 @@ async function onInit({
   renderer.toneMappingExposure = 1;
   renderer.outputEncoding = sRGBEncoding;
   renderer.setSize(initialCanvasWidth, initialCanvasHeight, false);
+
+  resourceManager.canvas = renderer.domElement;
 
   // // Set shadowmap
   // if (gl.shadowMap) {

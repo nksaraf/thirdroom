@@ -1,7 +1,7 @@
 import * as RAPIER from "@dimforge/rapier3d-compat";
 import { addEntity, createWorld, IWorld } from "bitecs";
 
-import { addTransformComponent, updateMatrixWorld } from "./component/transform";
+import { addTransformComponent, Transform, updateMatrixWorld } from "./component/transform";
 import { createCursorBuffer } from "./allocator/CursorBuffer";
 import { maxEntities, NOOP, tickRate } from "./config";
 import {
@@ -10,6 +10,7 @@ import {
   remoteResourceDisposed,
   remoteResourceLoaded,
   remoteResourceLoadError,
+  loadRemoteResource,
 } from "./resources/RemoteResourceManager";
 import { copyToWriteBuffer, getReadBufferIndex, swapWriteBuffer, TripleBufferState } from "./TripleBuffer";
 import { createInputState, InputState, InputStateGetters } from "./input/InputManager";
@@ -26,6 +27,10 @@ import { renderableBuffer } from "./component";
 import { init } from "../editor";
 import { createStatsBuffer, StatsBuffer, writeGameWorkerStats } from "./stats";
 import { exportGLTF } from "./gltf/exportGLTF";
+import { createCamera } from "./prefab";
+import { ControlType } from "./resources/ControlResourceLoader";
+import { addRenderableComponent, Renderable, setActiveCamera } from "./component/renderable";
+import { CameraType } from "./resources/CameraResourceLoader";
 
 const workerScope = globalThis as typeof globalThis & Worker;
 
@@ -227,6 +232,33 @@ async function onInit({
     systems: [],
     statsBuffer,
   };
+
+  // const eid = addEntity(state.world);
+  // // addTransformComponent(state.world, eid);
+  // const cameraResource = loadRemoteResource(state.resourceManager, {
+  //   type: "camera",
+  //   cameraType: CameraType.Perspective,
+  //   yfov: 75,
+  //   znear: 0.1,
+  // });
+  // addRenderableComponent(state, eid, cameraResource);
+
+  // // if (setActive) {
+  // setActiveCamera(state, eid);
+  // }
+
+  // return eid;
+
+  // const editorCam = createCamera(state, true);
+
+  // const res = loadRemoteResource(state.resourceManager, {
+  //   type: "controls",
+  //   name: "editor-controls",
+  //   controlType: ControlType.Orbit,
+  //   cameraRid: cameraResource,
+  // });
+
+  // Transform.position[editorCam][0] = 50;
 
   await init(state);
 
