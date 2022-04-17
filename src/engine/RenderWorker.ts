@@ -216,7 +216,6 @@ async function onInit({
   registerResourceLoader(resourceManager, CameraResourceLoader);
   registerResourceLoader(resourceManager, LightResourceLoader);
   registerResourceLoader(resourceManager, GLTFResourceLoader);
-  // registerResourceLoader(resourceManager, ControlResourceLoader);
 
   scene.add(new AmbientLight(0xffffff, 0.5));
 
